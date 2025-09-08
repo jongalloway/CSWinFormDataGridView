@@ -43,7 +43,7 @@ namespace CSWinFormDataGridView.DataGridViewPaging
             "Persist Security Info=False;" +
             "Integrated Security=SSPI;" +
             "Initial Catalog=Northwind;" +
-            "server=localhost";
+            "Data Source=(localdb)\\MSSQLLocalDB";
 
         private SqlConnection conn;
         private SqlDataAdapter adapter;
