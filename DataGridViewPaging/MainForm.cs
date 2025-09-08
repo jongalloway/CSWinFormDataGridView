@@ -1,153 +1,126 @@
-﻿/********************************* Module Header **********************************\
-* Module Name:	DataGridViewPaging
-* Project:		CSWinFormDataGridView
-* Copyright (c) Microsoft Corporation.
-* 
-* This sample demonstrates how to page data in the  DataGridView control;
-* 
-* This source is subject to the Microsoft Public License.
-* See http://www.microsoft.com/opensource/licenses.mspx#Ms-PL.
-* All other rights reserved.
-* 
-* History:
-* * 6/10/2009 3:00 PM Zhi-Xin Ye Created
-\**********************************************************************************/
-
-#region Using directives
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using System.Data.SqlClient;
-#endregion
-
 
 namespace CSWinFormDataGridView.DataGridViewPaging
 {
     public partial class MainForm : Form
     {
+        private BindingSource bindingSource = new BindingSource();
+        private DataTable dataTable = new DataTable();
+        private int pageSize = 20;
+        private int currentPage = 0;
+        private int totalPages = 0;
+
         public MainForm()
         {
             InitializeComponent();
         }
 
-        private int PageSize = 30; // 30 rows per page
-        private int CurrentPageIndex = 1;
-        private int TotalPage;
-
-        private string connstr =
-            "Persist Security Info=False;" +
-            "Integrated Security=SSPI;" +
-            "Initial Catalog=Northwind;" +
-            "server=localhost";
-
-        private SqlConnection conn;
-        private SqlDataAdapter adapter;
-        private SqlCommand command;
-
         private void MainForm_Load(object sender, EventArgs e)
         {
-            this.conn = new SqlConnection(connstr);
-            this.adapter = new SqlDataAdapter();
-            this.command = conn.CreateCommand();
-
-            // Get total count of the pages;
-            this.GetTotalPageCount();
+            // Create sample data
+            CreateSampleData();
             
-            this.dataGridView1.ReadOnly = true;
-
-            // Load the first page of data;
-            this.dataGridView1.DataSource = GetPageData(1);
+            // Set up the binding source
+            bindingSource.DataSource = dataTable;
+            dataGridView1.DataSource = bindingSource;
+            
+            // Calculate total pages
+            CalculateTotalPages();
+            
+            // Load first page
+            LoadPage(0);
         }
 
-        private void GetTotalPageCount()
+        private void CreateSampleData()
         {
-            command.CommandText = "Select Count(OrderID) From Orders";
+            dataTable.Columns.Add("ID", typeof(int));
+            dataTable.Columns.Add("Name", typeof(string));
+            dataTable.Columns.Add("Description", typeof(string));
+            dataTable.Columns.Add("Date", typeof(DateTime));
 
-            try
+            // Add sample data (100 rows for demonstration)
+            for (int i = 1; i <= 100; i++)
             {
-                conn.Open();
-                int rowCount = (int)command.ExecuteScalar();
-
-                this.TotalPage = rowCount / PageSize;
-
-                if (rowCount % PageSize > 0)
-                {
-                    this.TotalPage += 1;
-                }
-            }
-            finally
-            {
-                conn.Close();
+                dataTable.Rows.Add(i, $"Name {i}", $"Description for item {i}", DateTime.Now.AddDays(-i));
             }
         }
 
-        private DataTable GetPageData(int page)
+        private void CalculateTotalPages()
         {
-            DataTable dt = new DataTable();
-
-            if (page == 1)
+            if (dataTable.Rows.Count > 0)
             {
-                command.CommandText =
-                    "Select Top " + PageSize + " * From Orders Order By OrderID";
+                totalPages = (int)Math.Ceiling((double)dataTable.Rows.Count / pageSize);
             }
             else
             {
-                int lowerPageBoundary = ( page - 1) * PageSize;
+                totalPages = 0;
+            }
+        }
 
-                command.CommandText = "Select Top " + PageSize +
-                    " * From Orders " +
-                    " WHERE OrderID NOT IN "+
-                    " (SELECT TOP " + lowerPageBoundary + " OrderID From Orders Order By OrderID) "+
-                    " Order By OrderID";
-            }
-            try
-            {
-                this.conn.Open();
-                this.adapter.SelectCommand = command;
-                this.adapter.Fill(dt);
-            }
-            finally
-            {
-                conn.Close();
-            }
+        private void LoadPage(int pageNumber)
+        {
+            if (pageNumber < 0 || pageNumber >= totalPages)
+                return;
 
-            return dt;
+            currentPage = pageNumber;
+            
+            var pageData = dataTable.AsEnumerable()
+                .Skip(pageNumber * pageSize)
+                .Take(pageSize)
+                .CopyToDataTable();
+            
+            dataGridView1.DataSource = pageData;
+            
+            // Update button states
+            UpdateButtonStates();
+        }
+
+        private void UpdateButtonStates()
+        {
+            toolStripButtonFirst.Enabled = currentPage > 0;
+            toolStripButtonPrev.Enabled = currentPage > 0;
+            toolStripButtonNext.Enabled = currentPage < totalPages - 1;
+            toolStripButtonLast.Enabled = currentPage < totalPages - 1;
         }
 
         private void toolStripButtonFirst_Click(object sender, EventArgs e)
         {
-            this.CurrentPageIndex = 1;
-            this.dataGridView1.DataSource = GetPageData(this.CurrentPageIndex);
+            LoadPage(0);
         }
 
         private void toolStripButtonPrev_Click(object sender, EventArgs e)
         {
-            if (this.CurrentPageIndex > 1)
+            if (currentPage > 0)
             {
-                this.CurrentPageIndex--;
-                this.dataGridView1.DataSource = GetPageData(this.CurrentPageIndex);
+                LoadPage(currentPage - 1);
             }
         }
 
         private void toolStripButtonNext_Click(object sender, EventArgs e)
         {
-            if (this.CurrentPageIndex < this.TotalPage)
+            if (currentPage < totalPages - 1)
             {
-                this.CurrentPageIndex++;
-                this.dataGridView1.DataSource = GetPageData(this.CurrentPageIndex);
+                LoadPage(currentPage + 1);
             }
         }
 
         private void toolStripButtonLast_Click(object sender, EventArgs e)
         {
-            this.CurrentPageIndex = TotalPage;
-            this.dataGridView1.DataSource = GetPageData(this.CurrentPageIndex);
+            LoadPage(totalPages - 1);
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 }
