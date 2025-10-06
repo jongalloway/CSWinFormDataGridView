@@ -2,6 +2,8 @@
 
 This script guides you through the three-stage modernization journey of the CSWinFormDataGridView application, from the original 2012 code to a modern .NET 9 application with AI features.
 
+**Important:** This demo is performed entirely on the `main` branch. The `dotnet9` and `ai-queries` branches exist as reference points showing the completed state of each stage, and can be used as backup if you encounter issues or need to skip ahead due to time constraints.
+
 ## Prerequisites
 
 Before starting, ensure you have:
@@ -10,10 +12,12 @@ Before starting, ensure you have:
 - SQL Server LocalDB
 - Northwind database set up (see main README.md)
 - AI_API_KEY environment variable configured (for Stage 3)
+- Working on the `main` branch of the repository
 
-## Stage 1: Original Code (branch: `main`)
+## Stage 1: Examine the Original Code
 
-### Checkout the Original Code
+### Starting Point
+You should be on the `main` branch with the original 2012 code:
 ```bash
 git checkout main
 ```
@@ -35,46 +39,52 @@ Open `DataGridViewPaging/MainForm.cs` and observe:
 
 ---
 
-## Stage 2: Modernize to .NET 9 (branch: `dotnet9`)
+## Stage 2: Modernize to .NET 9
 
-### Checkout the .NET 9 Branch
-```bash
-git checkout dotnet9
-```
+Now we'll modernize the application to .NET 9. All changes are made to the files in the `main` branch.
 
-### Key Changes Made
+> **Reference:** If you need to see the completed state, the `dotnet9` branch shows all these changes already applied.
+
+### Key Changes to Make
 
 #### 1. Update the Project File
-The `.csproj` was updated from .NET Framework 3.5 to .NET 9.
 
-#### 2. Update Database Library
+Update the `.csproj` file to target .NET 9 instead of .NET Framework 3.5. You can use Visual Studio's project upgrade wizard or manually edit the project file.
+
+#### 2. Update Database Library in MainForm.cs
+
 Replace `System.Data.SqlClient` with `Microsoft.Data.SqlClient`:
 
 ```csharp
-// Old (main branch):
+// Change this line:
 using System.Data.SqlClient;
 
-// New (dotnet9 branch):
+// To this:
 using Microsoft.Data.SqlClient;
 ```
 
-#### 3. Improve Connection String
+#### 3. (Optional) Improve Connection String
+
+You can optionally update the connection string to a more modern format:
+
 ```csharp
-// Old connection string format:
+// Original connection string:
 private string connstr =
     "Persist Security Info=False;" +
     "Integrated Security=SSPI;" +
     "Initial Catalog=Northwind;" +
     "Data Source=(localdb)\\MSSQLLocalDB";
 
-// Could be updated to modern format (already works in dotnet9):
+// Modern format (optional):
 private string connstr =
     "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True;Connect Timeout=30;Encrypt=False;";
 ```
 
 #### 4. Add Modern Resource Disposal
+
+Add a proper Dispose pattern at the end of the `MainForm` class:
+
 ```csharp
-// Add proper Dispose pattern at the end of the class:
 protected override void Dispose(bool disposing)
 {
     if (disposing)
@@ -100,14 +110,11 @@ protected override void Dispose(bool disposing)
 
 ---
 
-## Stage 3: Add AI Features (branch: `ai-queries`)
+## Stage 3: Add AI Features
 
-### Checkout the AI Features Branch
-```bash
-git checkout ai-queries
-```
+Now we'll add AI-powered semantic search to the application. All changes continue to be made on your working branch.
 
-Now, let's walk through adding the AI features to the application by applying code snippets.
+> **Reference:** If you need to see the completed state or skip ahead, the `ai-queries` branch shows all these changes already applied.
 
 ### Step 1: Add Required NuGet Packages
 
@@ -490,23 +497,34 @@ The AI-powered semantic search:
 
 ## Summary
 
-You've now completed the modernization journey:
+You've now completed the modernization journey by making all changes on the `main` branch:
 
-1. **Stage 1 (main)**: Started with original 2012 Windows Forms code
-2. **Stage 2 (dotnet9)**: Modernized to .NET 9 with updated libraries and patterns
-3. **Stage 3 (ai-queries)**: Added AI-powered natural language query capabilities
+1. **Stage 1**: Started with original 2012 Windows Forms code
+2. **Stage 2**: Modernized to .NET 9 with updated libraries and patterns
+3. **Stage 3**: Added AI-powered natural language query capabilities
+
+The `dotnet9` and `ai-queries` branches exist as reference points showing the completed state at each stage, and can be used as backup if needed.
 
 This demonstrates how legacy applications can be incrementally modernized while adding cutting-edge AI features.
 
 ## Tips for Presentation
 
+- Work on the `main` branch for all demo steps
+- The `dotnet9` and `ai-queries` branches are backup/reference only - mention them but don't check them out during the demo
 - Run the application at each stage to show the progression
 - Use the pre-populated example queries in the dropdown to demonstrate AI features
 - Show how the AI translates natural language to SQL in real-time
 - Highlight the safety features (only SELECT queries allowed)
 - Emphasize how GitHub Copilot can assist in both the modernization and AI feature addition
+- If short on time or encountering issues, you can reference or switch to the completed branches
 
 ## Troubleshooting
+
+### Need to Skip Ahead or Recover?
+If you encounter issues or are short on time:
+- The `dotnet9` branch shows the completed Stage 2 modernization
+- The `ai-queries` branch shows the completed Stage 3 with AI features
+- You can check out these branches to continue from a working state
 
 ### AI Features Not Working
 - Verify `AI_API_KEY` environment variable is set
