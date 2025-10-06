@@ -288,8 +288,28 @@ namespace CSWinFormDataGridView.DataGridViewPaging
                     MessageBox.Show("AI is not configured properly. Please set the AI_API_KEY environment variable.",
                         "AI Not Ready", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return GetAllOrders();
-                }                // Create a concise prompt with the database schema
-                var prompt = $@"
+                }
+
+                // Generate SQL from natural language query
+                string generatedSql = await GenerateSqlFromQueryAsync(query);
+                
+                // Display the generated SQL to the user
+                DisplayGeneratedSql(generatedSql);
+
+                // Validate and execute the query
+                return await ExecuteSqlQueryAsync(generatedSql);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error generating or executing SQL: {ex.Message}",
+                    "SQL Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return GetAllOrders();
+            }
+        }
+
+        private async Task<string> GenerateSqlFromQueryAsync(string query)
+        {
+            var prompt = $@"
 You are an SQL expert that converts natural language questions into valid SQL queries for a Northwind database.
 
 Database schema information:
@@ -300,58 +320,72 @@ Convert this question into a valid SQL Server query: ""{query}""
 Return ONLY the SQL query without any explanation, comments or markdown formatting. The query should be valid for SQL Server 2016.
 Limit results to 100 rows maximum.";
 
-                // Get SQL from AI
-                var response = await _chatClient.CompleteChatAsync(prompt);
-                string generatedSql = response.Value.Content[0].Text;
+            var response = await _chatClient.CompleteChatAsync(prompt);
+            string generatedSql = response.Value.Content[0].Text;
 
-                if (string.IsNullOrEmpty(generatedSql))
-                {
-                    throw new Exception("Failed to get a valid response from the AI service.");
-                }
-                generatedSql = generatedSql.Trim();
-
-                // Update tooltip and show message box with generated SQL
-                if (btnSearch.Tag is Tuple<ToolTip, Button> tagPair)
-                {
-                    tagPair.Item1.SetToolTip(btnSearch, generatedSql);
-                }
-                MessageBox.Show($"Generated SQL Query:\n\n{generatedSql}",
-                    "AI-Generated SQL", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // Safety check to ensure query only performs SELECT or WITH (for CTEs) operations
-                string sqlLower = generatedSql.Trim().ToLower();
-                if (!sqlLower.StartsWith("select") && !sqlLower.StartsWith("with "))
-                {
-                    throw new InvalidOperationException("Only SELECT queries and Common Table Expressions (WITH) are allowed for safety reasons.");
-                }
-
-                // Execute the AI-generated query
-                DataTable results = new DataTable();
-                using (SqlCommand sqlCommand = new SqlCommand(generatedSql, conn))
-                {
-                    try
-                    {
-                        conn.Open();
-                        SqlDataAdapter adapter = new SqlDataAdapter(sqlCommand);
-                        adapter.Fill(results);
-                    }
-                    finally
-                    {
-                        conn.Close();
-                    }
-                }
-
-                return results;
-            }
-            catch (Exception ex)
+            if (string.IsNullOrEmpty(generatedSql))
             {
-                MessageBox.Show($"Error generating or executing SQL: {ex.Message}",
-                    "SQL Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                // Fall back to getting all orders on error
-                return GetAllOrders();
+                throw new Exception("Failed to get a valid response from the AI service.");
             }
-        }        // Hardcoded Northwind database schema as a property for performance and simplicity
+
+            return StripMarkdownCodeBlock(generatedSql);
+        }
+
+        private void DisplayGeneratedSql(string sql)
+        {
+            // Update tooltip
+            if (btnSearch.Tag is Tuple<ToolTip, Button> tagPair)
+            {
+                tagPair.Item1.SetToolTip(btnSearch, sql);
+            }
+
+            // Show message box with generated SQL
+            MessageBox.Show($"Generated SQL Query:\n\n{sql}",
+                "AI-Generated SQL", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private async Task<DataTable> ExecuteSqlQueryAsync(string sql)
+        {
+            // Safety check to ensure query only performs SELECT or WITH (for CTEs) operations
+            string sqlLower = sql.Trim().ToLower();
+            if (!sqlLower.StartsWith("select") && !sqlLower.StartsWith("with "))
+            {
+                throw new InvalidOperationException("Only SELECT queries and Common Table Expressions (WITH) are allowed for safety reasons.");
+            }
+
+            // Execute the AI-generated query
+            DataTable results = new DataTable();
+            using (SqlCommand sqlCommand = new SqlCommand(sql, conn))
+            {
+                try
+                {
+                    conn.Open();
+                    SqlDataAdapter adapter = new SqlDataAdapter(sqlCommand);
+                    adapter.Fill(results);
+                }
+                finally
+                {
+                    conn.Close();
+                }
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Strips markdown code block formatting from SQL queries.
+        /// Removes ```sql or ``` from the beginning and ``` from the end.
+        /// </summary>
+        private string StripMarkdownCodeBlock(string sql)
+        {
+            if (string.IsNullOrWhiteSpace(sql))
+                return sql;
+
+            // Remove markdown code blocks: ```sql\n or ```\n at start and ``` at end
+            return System.Text.RegularExpressions.Regex.Replace(sql.Trim(), @"^```(?:sql)?\s*\n?|\n?```$", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline).Trim();
+        }
+
+        // Hardcoded Northwind database schema as a property for performance and simplicity
         private string DatabaseSchema => @"Tables in Northwind database:
 - Table: Orders
   Columns: OrderID, CustomerID, EmployeeID, OrderDate, RequiredDate, ShippedDate, ShipVia, Freight, ShipName, ShipAddress, ShipCity, ShipRegion, ShipPostalCode, ShipCountry
