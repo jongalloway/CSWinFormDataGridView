@@ -8,6 +8,34 @@ This project showcases the journey of taking a legacy Windows Forms application 
 
 **Original Source:** [Windows Forms DataGridView Demo (CSWinFormDataGridView)](https://github.com/microsoftarchive/msdn-code-gallery-microsoft/tree/master/OneCodeTeam/Windows%20Forms%20DataGridView%20demo%20(CSWinFormDataGridView))
 
+## Repository Branches
+
+This repository uses three branches to demonstrate the modernization journey:
+
+### `main` - Original 2012 Code
+The starting point with the original Windows Forms application from 2012:
+- Targets .NET Framework 3.5
+- Uses `System.Data.SqlClient` for database connectivity
+- Classic Windows Forms patterns and code style
+- Original connection string format
+
+### `dotnet9` - Modernized to .NET 9
+The application after modernization to .NET 9:
+- Updated to .NET 9 target framework
+- Migrated to `Microsoft.Data.SqlClient` (modern SQL client library)
+- Updated connection strings for SQL Server LocalDB
+- Added modern C# language features (null-conditional operators, using statements)
+- Improved resource disposal patterns
+
+### `ai-queries` - AI Features Added
+The final state with AI-powered semantic search:
+- Includes all .NET 9 modernizations
+- Adds `Microsoft.Extensions.AI` integration
+- Natural language to SQL query translation using AI
+- Semantic search interface for querying the Northwind database
+- Support for GitHub Models and Azure AI Foundry
+- Environment variable configuration for API keys
+
 ## Features
 
 - **DataGridView Paging**: Demonstrates pagination of data in the DataGridView control
@@ -76,23 +104,25 @@ set AI_API_KEY=your-github-token-here
 
 ## Demo Flow
 
-This repository is designed to showcase a modernization journey in three stages:
+This repository is designed to showcase a modernization journey in three stages. **See [DEMO_SCRIPT.md](DEMO_SCRIPT.md) for detailed step-by-step instructions on following the modernization path and adding AI features.**
 
-### 1. Start with Original Code
+### 1. Start with Original Code (branch: `main`)
 The original Windows Forms application from 2012, targeting .NET Framework 3.5, demonstrating classic WinForms development patterns.
 
-### 2. Modernize to .NET 9
+### 2. Modernize to .NET 9 (branch: `dotnet9`)
 Using Visual Studio and GitHub Copilot to:
 - Upgrade the project to .NET 9
 - Update connection strings for LocalDB usage
+- Migrate to `Microsoft.Data.SqlClient`
 - Modernize code patterns and syntax
 - Leverage new language features
 
-### 3. Add AI Features
+### 3. Add AI Features (branch: `ai-queries`)
 Integrate AI capabilities using GitHub Copilot to:
-- Add intelligent data processing
-- Implement AI-powered features
-- Enhance user experience with AI suggestions
+- Add natural language to SQL query translation
+- Implement semantic search interface
+- Connect to GitHub Models or Azure AI Foundry
+- Enhance user experience with AI-powered data queries
 
 ## Running the Application
 
