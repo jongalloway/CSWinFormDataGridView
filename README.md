@@ -38,21 +38,41 @@ The application uses the Northwind sample database. To set it up in SQL Server L
 
 Alternatively, you can open the `instnwnd.sql` file in SQL Server Management Studio and execute it against the Northwind database.
 
-### 2. Configure AI Connection String
+### 2. Configure AI API Key
 
-To use the AI features, you need to set up an environment variable with your AI service connection string:
+To use the AI features, you need to set up an environment variable with your AI service API key. The application uses the `AI_API_KEY` environment variable to authenticate with AI services.
+
+#### Supported AI Services
+
+This application works with:
+- **GitHub Models** - Free AI models for GitHub users: https://github.com/marketplace/models
+- **Azure AI Foundry** - Enterprise AI services: https://ai.azure.com
+
+Both services use the endpoint: `https://models.inference.ai.azure.com`
+
+#### Setting up the API Key
+
+**For GitHub Models:**
+1. Go to https://github.com/settings/tokens
+2. Generate a new personal access token with the `models:read` scope
+3. Set the environment variable:
 
 **Windows (PowerShell):**
 ```powershell
-$env:AI_CONNECTION_STRING="your-connection-string-here"
+$env:AI_API_KEY="your-github-token-here"
 ```
 
 **Windows (Command Prompt):**
 ```cmd
-set AI_CONNECTION_STRING=your-connection-string-here
+set AI_API_KEY=your-github-token-here
 ```
 
-**Note:** For permanent configuration, set this as a system or user environment variable through System Properties.
+**For Azure AI Foundry:**
+1. Create an Azure AI resource at https://ai.azure.com
+2. Get your API key from the Azure portal
+3. Set the environment variable using the same commands above with your Azure API key
+
+**Note:** For permanent configuration, set `AI_API_KEY` as a system or user environment variable through System Properties > Advanced > Environment Variables.
 
 ## Demo Flow
 
