@@ -51,7 +51,7 @@ namespace CSWinFormDataGridView.DataGridViewPaging
                 new ApiKeyCredential(apiKey),
                 new OpenAIClientOptions { Endpoint = new Uri("https://models.inference.ai.azure.com") }
             );
-            _chatClient = client.GetChatClient("gpt-4o");
+            _chatClient = client.GetChatClient("gpt-4.1-mini");
         }
         // END SNIPPET 2
 
